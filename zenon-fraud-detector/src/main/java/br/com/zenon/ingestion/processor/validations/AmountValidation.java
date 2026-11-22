@@ -17,7 +17,7 @@ public class AmountValidation implements TransactionValidation {
             throw new IndexException("Amount Index not found");
         }
         Object value = mapLine.get(AMOUNT);
-        if (value == null || new BigDecimal(value.toString()).compareTo(BigDecimal.ZERO) <= 0) {
+        if (value == null || new BigDecimal(value.toString()).compareTo(BigDecimal.ZERO) < 0) {
             throw new AmountException("Invalid " + value + " for amount");
         }
     }
