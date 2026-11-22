@@ -3,6 +3,7 @@ package br.com.zenon.domain;
 import java.math.BigDecimal;
 
 public record Transaction(
+        Long id,
         Long step,
         TransactionType type,
         BigDecimal amount,

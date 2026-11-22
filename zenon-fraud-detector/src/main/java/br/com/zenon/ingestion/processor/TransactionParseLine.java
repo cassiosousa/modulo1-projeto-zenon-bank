@@ -56,7 +56,7 @@ public class TransactionParseLine {
         TransactionType transactionType = TransactionType.get(mapLine.get(TYPE).toString());
         BigDecimal balance = new BigDecimal(mapLine.get(AMOUNT).toString());
 
-        return new Transaction(
+        return new Transaction(null,
                 step,
                 transactionType,
                 balance,

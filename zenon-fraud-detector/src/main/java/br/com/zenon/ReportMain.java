@@ -23,6 +23,7 @@ public class ReportMain {
         try (Stream<String> lines = java.nio.file.Files.lines(Path.of(resourceAsStream.toURI()));) {
             var start = System.nanoTime();
             lines.skip(1)
+                    .parallel()
                     .map(transactionParseLine::parse)
                     .map(Optional::get)
                     .gather(transactionsSummarize())
