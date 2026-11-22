@@ -16,9 +16,9 @@ public class TransactionIngestor {
         this.transactionsReaderPipeLine = transactionsReaderPipeLine;
     }
 
-    public Optional<List<Transaction>> transactions(String file) {
+    public Optional<List<Transaction>> transactions(String file, int chunk) {
         BufferedReader bufferedReader = transactionsReaderPipeLine.readerFile(file);
-        return transactionsReaderPipeLine.readTransactions(bufferedReader, 1000);
+        return transactionsReaderPipeLine.readTransactions(bufferedReader, chunk);
 
     }
 

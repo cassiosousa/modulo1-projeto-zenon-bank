@@ -6,7 +6,7 @@ public record Transaction(
         Long step,
         TransactionType type,
         BigDecimal amount,
-        Customer customerOrigen,
+        Customer customerOrigin,
         Customer customerDestination,
         boolean isFraud,
         boolean isFlaggedFraud
