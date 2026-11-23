@@ -9,17 +9,13 @@ import java.util.Map;
 
 public class TransactionLinePipelineValidation implements PipelineValidation {
 
-    private final List<TransactionValidation> lineValidations;
-
-    public TransactionLinePipelineValidation() {
-        lineValidations = List.of(
-                new StepValidation(),
-                new TypeValidation(),
-                new AmountValidation(),
-                new CustomerOriginValidation(),
-                new CustomerDestinationValidation()
-        );
-    }
+    private final List<TransactionValidation> lineValidations = List.of(
+            new StepValidation(),
+            new TypeValidation(),
+            new AmountValidation(),
+            new CustomerOriginValidation(),
+            new CustomerDestinationValidation()
+    );
 
     @Override
     public void execute(Map<TransactionFieldKey, Object> mapLine) throws TransactionValidateException {

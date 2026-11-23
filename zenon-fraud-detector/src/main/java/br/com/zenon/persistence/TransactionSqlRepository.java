@@ -15,6 +15,11 @@ import java.util.logging.Logger;
 
 public class TransactionSqlRepository implements TransactionRepository {
     private final Logger logger = Logger.getLogger(TransactionSqlRepository.class.getName());
+    private Connection conn;
+
+    public TransactionSqlRepository() {
+        this.conn = getConnection();
+    }
 
     @Override
     public Optional<TransactionEntity> findByNameOrigin(String name) {
@@ -55,6 +60,7 @@ public class TransactionSqlRepository implements TransactionRepository {
         executeUpdate(sql, transaction);
         return transaction;
     }
+
     @Override
     public List<TransactionEntity> saveAll(List<TransactionEntity> transactions) {
         final String sql = """
@@ -142,8 +148,12 @@ public class TransactionSqlRepository implements TransactionRepository {
 
     }
 
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection("jdbc:postgresql://localhost:5432/db", "root", "123");
+    private Connection getConnection() {
+        try {
+            return DriverManager.getConnection("jdbc:postgresql://localhost:5432/db?reWriteBatchedInserts=true", "root", "");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void executeUpdate(String sql, TransactionEntity entity) {
@@ -151,28 +161,52 @@ public class TransactionSqlRepository implements TransactionRepository {
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);) {
 
-            try (ps) {
-                ps.setLong(1, entity.step());
-                ps.setString(2, entity.type().name());
-                ps.setBigDecimal(3, entity.amount());
-                ps.setString(4, entity.customerOrigin().name());
-                ps.setBigDecimal(5, entity.customerOrigin().oldBalance());
-                ps.setBigDecimal(6, entity.customerOrigin().newBalance());
+            prepareStatement(ps, entity);
+            ps.executeUpdate();
 
-                ps.setString(7, entity.customerDestination().name());
-                ps.setBigDecimal(8, entity.customerDestination().oldBalance());
-                ps.setBigDecimal(9, entity.customerDestination().newBalance());
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
 
-                ps.setBoolean(10, entity.isFraud());
-                ps.setBoolean(11, entity.isFlaggedFraud());
-                ps.executeUpdate();
-            } catch (SQLException e) {
-                logger.log(Level.SEVERE, e.getMessage(), e);
-                throw new RuntimeException(e);
+    private void executeUpdate(String sql, List<TransactionEntity> transactions) {
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);) {
+            conn.setAutoCommit(false);
+            int batchSize = 10_000;
+            for (int i = 0; i < transactions.size(); i += batchSize) {
+
+                int end = Math.min(i + batchSize, transactions.size());
+                var chunkList = transactions.subList(i, end);
+
+                for (TransactionEntity transaction : chunkList) {
+                    prepareStatement(ps, transaction);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                conn.commit();
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
             throw new RuntimeException(e);
         }
+    }
+
+    private void prepareStatement(PreparedStatement ps, TransactionEntity entity) throws SQLException {
+        ps.setLong(1, entity.step());
+        ps.setString(2, entity.type().name());
+        ps.setBigDecimal(3, entity.amount());
+        ps.setString(4, entity.customerOrigin().name());
+        ps.setBigDecimal(5, entity.customerOrigin().oldBalance());
+        ps.setBigDecimal(6, entity.customerOrigin().newBalance());
+
+        ps.setString(7, entity.customerDestination().name());
+        ps.setBigDecimal(8, entity.customerDestination().oldBalance());
+        ps.setBigDecimal(9, entity.customerDestination().newBalance());
+
+        ps.setBoolean(10, entity.isFraud());
+        ps.setBoolean(11, entity.isFlaggedFraud());
     }
 }

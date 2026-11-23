@@ -29,13 +29,16 @@ public class TransactionParseLine {
     }
 
     public Optional<Transaction> parse(String line) {
+        if (line == null || line.isBlank()) {
+            return Optional.empty();
+        }
         StringTokenizer tokenizer = tokenizerLine.tokenizer(line);
         int NO_TOKENS = 0;
         if (tokenizer.countTokens() == NO_TOKENS) {
             return Optional.empty();
         }
         int tokenNumber = 0;
-        Map<TransactionFieldKey, Object> mapLine = new HashMap<>();
+        Map<TransactionFieldKey, Object> mapLine = new HashMap<>(11);
         try {
             while (tokenizer.hasMoreElements()) {
                 Object value = tokenizer.nextElement();
